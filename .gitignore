@@ -1,0 +1,23 @@
+# common(https://gist.github.com/octocat/9257657)
+*.7z
+*.zip
+*.tar
+*.gz
+*.pyc
+*.sql
+*.log
+*.exe
+*.com
+*.dll
+
+
+# GIS files
+*.shp
+*.shx
+*.sbx
+*.prj
+*.sbn
+*.atx
+*.dbf
+*.cpg
+*.gdb
