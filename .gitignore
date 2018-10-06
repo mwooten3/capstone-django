@@ -1,3 +1,9 @@
+# migration files
+waterExplorer/migrations/*
+
+# 
+*.pyc
+
 # common(https://gist.github.com/octocat/9257657)
 *.7z
 *.zip
