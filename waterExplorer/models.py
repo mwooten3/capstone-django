@@ -82,3 +82,7 @@ class MaxExtent(models.Model):
             return "ID {}: {} ({}, {})".format(self.id, self.lakeName, self.centerLon, self.centerLat)
         else:
             return "ID {}: Not named ({}, {})".format(self.id, self.centerLon, self.centerLat)
+
+
+#    def get_fields(self):
+#        return [(field.name, field.value_to_string(self)) for field in MaxExtent.__meta.fields]
