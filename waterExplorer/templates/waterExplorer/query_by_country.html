@@ -1,0 +1,9 @@
+{% if querySet %}
+    <ul>
+    {% for lake in querySet %}
+        <li><a href="/waterExplorer/viewer/{{ lake.id }}/">ID {{ lake.id }}: Max area = {{ lake.areaMax }} km<sup>2</sup></a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No water bodies are available.</p>
+{% endif %}

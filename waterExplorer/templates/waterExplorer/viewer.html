@@ -1,0 +1,52 @@
+
+<!-- test stuff- can use later when dealing with a query set and not one object
+but for now we just wanna have a viewer view for the purpose of viewing info about one object
+<p>
+
+{{ waterBody }}
+
+</p>
+
+
+{{ displayFields }}
+<table>
+    <thead>
+        {% for field in displayFields %}
+            <th>{{ field.label }}</th>
+        {% endfor %}
+    </thead>
+    <tbody>
+        <tr>
+            {% for field in displayFields %}
+                <td>{{ field.value|default_if_none:'' }}</td>
+            {% endfor %}
+        </tr>
+    </tbody>
+</table>
+
+
+{% for field in displayFields %}
+    <p>{{field.name}}, {{ field.value }}<br></p>
+{% endfor %}
+-->
+
+
+<br>
+<h1>----------------Object Attributes for ID = {{ waterBody.id }}-----------------</h1>
+<br>
+<table>
+   <thead>
+      <th>Field Name</th>
+      <th>Description</th>
+      <th>Value</th>
+   </thead>
+   <tbody>
+      {% for field in displayFields %}
+      <tr> 
+        <td><span style="font-weight:bold">{{ field.name }}</span></td>
+        <td>{{ field.label }}</td>
+        <td>{{ field.value }}</td>
+      </tr>
+      {% endfor %}
+   </tbody>
+</table>
