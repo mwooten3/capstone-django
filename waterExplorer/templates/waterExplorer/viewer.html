@@ -1,37 +1,3 @@
-
-<!-- test stuff- can use later when dealing with a query set and not one object
-but for now we just wanna have a viewer view for the purpose of viewing info about one object
-<p>
-
-{{ waterBody }}
-
-</p>
-
-
-{{ displayFields }}
-<table>
-    <thead>
-        {% for field in displayFields %}
-            <th>{{ field.label }}</th>
-        {% endfor %}
-    </thead>
-    <tbody>
-        <tr>
-            {% for field in displayFields %}
-                <td>{{ field.value|default_if_none:'' }}</td>
-            {% endfor %}
-        </tr>
-    </tbody>
-</table>
-
-
-{% for field in displayFields %}
-    <p>{{field.name}}, {{ field.value }}<br></p>
-{% endfor %}
--->
-
-
-
 <html>
 <head>
 
@@ -55,6 +21,30 @@ var gjson;
 var gjson = { "type": "Feature",
             "geometry": {{ waterBody.poly.geojson|safe }}
             } 
+/* Get zoom based on lake size */
+if ({{ waterBody.areaMax }} < 20) {
+    zoomSize = 10;
+} else if (({{ waterBody.areaMax }} >= 20) && ({{ waterBody.areaMax }} < 870)) {
+    zoomSize = 9;
+} else if (({{ waterBody.areaMax }} >= 870) && ({{ waterBody.areaMax }} < 9000)) {
+    zoomSize = 8;
+} else if (({{ waterBody.areaMax }} >= 9000) && ({{ waterBody.areaMax }} < 57815)) {
+    zoomSize = 7;
+} else if (({{ waterBody.areaMax }} >= 57815) && ({{ waterBody.areaMax }} < 83000)) {
+    zoomSize = 6;
+} else {
+    zoomSize = 5;
+}
+
+/* If type is river or resevoir, zoom way out
+* This only works if typeGlwd is provided
+*/
+{% if waterBody.typeGlwd %}
+if (("{{ waterBody.typeGlwd }}" == "River") || ("{{ waterBody.typeGlwd }}" == "Resevoir")) {
+    zoomSize = 4;
+}
+{% endif %}
+
  /* 
   * use google maps api built-in mechanism to attach dom events 
   */
@@ -65,7 +55,7 @@ var gjson = { "type": "Feature",
    */ 
   var map = new google.maps.Map  (document.getElementById("map_div"), { 
    center: new google.maps.LatLng({{  waterBody.centerLat}}, {{ waterBody.centerLon }}), 
-   zoom: 7, 
+   zoom: zoomSize, 
    mapTypeId: google.maps.MapTypeId.HYBRID 
   }); 
   map.data.addGeoJson(gjson);
