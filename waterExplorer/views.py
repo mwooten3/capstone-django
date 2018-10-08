@@ -35,6 +35,15 @@ def viewer(request, req_id):
 
     return render(request, 'waterExplorer/viewer.html', context)
 
+
+
+
+
+# Filter views:
+# By name --> viewer/id
+# By Size --> aggViewer
+# By location --> aggViewer
+
 # Query by country
 # water/explorer/countryQuery/<CountryName>
 def query_by_country(request, country_name):
@@ -42,7 +51,7 @@ def query_by_country(request, country_name):
 #    querySet = MaxExtent.objects.filter(geoName = country_name)
     qs1 = MaxExtent.objects.filter(geoName__contains = country_name)
     qs2 = MaxExtent.objects.filter(sovereignty__contains = country_name)
-    querySet = list(chain(qs1, qs2))
+    querySet = list(chain(qs1, qs2)) # combine filters with or
     #out = '\n'.join([q.areaMax for q in querySet])
     #return HttpResponse(out)
     #template = loader.get_template('waterExplorer/query_by_country.html')

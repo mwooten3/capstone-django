@@ -31,22 +31,70 @@ but for now we just wanna have a viewer view for the purpose of viewing info abo
 -->
 
 
+
+<html>
+<head>
+
+</head>
+
+<body>
+<h1>Viewing water body with ID = {{ waterBody.id }} </h1>
+{% if waterBody.lakeName %}
+<h2>Name: {{ waterBody.lakeName }} </h2>
+{% endif %}
+
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBrEjsTOsGQBZe6jC0m5JC-Th03zq0QxMU&v=3"></script>
+<div id="map_div" style="height: 500px; width: 800px;"></div>
+<script type="text/javascript">
+
+/* 
+ * declare map as a global variable, create geojson feature by wrapping geojson 
+ */ 
+var map; 
+var gjson;
+var gjson = { "type": "Feature",
+            "geometry": {{ waterBody.poly.geojson|safe }}
+            } 
+ /* 
+  * use google maps api built-in mechanism to attach dom events 
+  */
+ google.maps.event.addDomListener(window, "load", function () { 
+
+  /* 
+   * create map 
+   */ 
+  var map = new google.maps.Map  (document.getElementById("map_div"), { 
+   center: new google.maps.LatLng({{  waterBody.centerLat}}, {{ waterBody.centerLon }}), 
+   zoom: 7, 
+   mapTypeId: google.maps.MapTypeId.HYBRID 
+  }); 
+  map.data.addGeoJson(gjson);
+});
+</script>
+
 <br>
-<h1>----------------Object Attributes for ID = {{ waterBody.id }}-----------------</h1>
+<h2>---------------------------------------------------------------------------------<br>Object attributes:</h2>
 <br>
-<table>
+<table style="width:63%">
    <thead>
-      <th>Field Name</th>
-      <th>Description</th>
-      <th>Value</th>
+      <th style="text-align: left;"><u>Field Name</u></th>
+      <th style="text-align: left;"><u>Description</u></th>
+      <th style="text-align: left;"><u>Value</u></th>
    </thead>
    <tbody>
       {% for field in displayFields %}
+      {% ifnotequal field.name "poly" %}
       <tr> 
         <td><span style="font-weight:bold">{{ field.name }}</span></td>
-        <td>{{ field.label }}</td>
+        <td><i>{{ field.label }}</i></td>
         <td>{{ field.value }}</td>
       </tr>
+      {% endifnotequal %}
       {% endfor %}
    </tbody>
 </table>
+
+
+
+</body>
+</html>
