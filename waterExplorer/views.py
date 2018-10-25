@@ -11,36 +11,42 @@ from django.db.models import Q, Max, Min, Avg
 from django.forms import ModelForm
 
 from .models import MaxExtent
-from .forms import NameForm, AggSearchForm
+from .forms import SearchForm
 from .functions import chart_object_areas
 
-# get lakes will include the search form AND the output of that search
-def getLakes(request):
+#searchDb includes search form AND the output of that search (unless Lake Name field is filled out)
+# if lake_name: waterExplorer/search --> searchDb() --> objectViewer.html
+# else:         waterExplorer/search --> searchDb() --> search.html
+def searchDb(request):
     context = {}
     if request.method == 'POST':
 
-        print request.POST
-        # populate results into context to be rendered in the template (like with viewer)
-        
-        # same pattern as below
-        # template
-        form = AggSearchForm(request.POST)
-#        print '1'
-#        print form
-#        print '2'
-#        print dir(form)
+        form = SearchForm(request.POST)
 
         if form.is_valid():
             # get objects from form
+            search_name = form.cleaned_data['lake_name']
             search_country = form.cleaned_data['country_name']
             search_region = form.cleaned_data['region_name']
             search_subregion = form.cleaned_data['subregion_name']
             search_continent = form.cleaned_data['continent_name']
-            search_sizeRange = form.cleaned_data['size_class'] # this wil; eventually be a range of values OR a drop-down of size classes (ranges). not sure how this will be affected
+            search_sizeRange = form.cleaned_data['size_class'] # will be like 0-62.5
             search_waterType = form.cleaned_data['water_type'] # will be drop down of 3 options (river, lake, resevoir)
 
+            #* for aggregate viewer, we also want to provide a histogram only IF size class filter is not used (see below for possible implementation notes)
+
+            if search_name:
+                best_match = MaxExtent.objects.filter(lakeName__icontains=search_name).order_by('-areaMax').first()           
+                if best_match:
+                    return redirect('objectViewer', req_id=best_match.pk)
+                else:
+                    error_message = 'Object with name {} does not exist'.format(search_name)
+                    context['error_message'] = error_message #* NEED to add this to template if theres error  
+                    return render(request, 'waterExplorer/search.html', context)
+
             # deal with location-based fields - use icontains to allow lower case entry (may not matter if/when we format fields as drop down/etc- still will need it for country)
-            if search_country:             
+            elif search_country:
+                # search 4 columns. use Q() to do an OR                  
                 objects = MaxExtent.objects.filter(Q(geoName__icontains = search_country) | Q(sovereignty__icontains = search_country) | Q(glwdCountry__icontains = search_country) | Q(glwdCountry2__icontains = search_country))
             elif search_region:
                 objects = MaxExtent.objects.filter(unRegion__icontains = search_region)
@@ -52,8 +58,11 @@ def getLakes(request):
                 objects = MaxExtent.objects.all() # get all objects (and filter further below)
 
             # add other filters #* fix these:
-            #if search_sizeRange:
-                #objects = objects.filter( # areaMax < range and areaMax > range          
+            if search_sizeRange:
+                search_min = search_sizeRange.split('-')[0]
+                search_max = search_sizeRange.split('-')[1]
+                objects = objects.filter(areaMax__gt = search_min, areaMax__lte = search_max)
+                #objects = objects.filter( # areaMax >= rangeMin and areaMax < rangeMax         
             if search_waterType: # NOTE (add note to form html? how?): This filter will only return objects that are in the GLWD
                 objects = objects.filter(typeGlwd__icontains = search_waterType)            
             
@@ -62,28 +71,48 @@ def getLakes(request):
                 results = [] # list of lists [attribute, result]
                 
                 count = len(objects) # since objects is already in memory, len() is faster than .count() according to django docs
-                min = objects.aggregate(val=Min('areaMax'))['val']
-                max = objects.aggregate(val=Max('areaMax'))['val']
-                significantObjs = objects.filter(pValue__lt = 0.05)
-                nSignificant = '{} ({}%)'.format(len(significantObjs), (len(significantObjs)/count)*100 )
-                aveSlope = significantObjs.aggregate(val=Avg('slope'))['val']
-                
-                results.extend([['Number of water bodies', count], ['Minimum area (all years)', min], \
-                 ['Maximum area (all years)', max], ['Number of water bodies with a statistically significant linear trend (p-value < 0.05)', nSignificant],\
-                 ['Average rate of change among statistically significant objects', aveSlope]])
+                min = objects.aggregate(val=Min('areaMax'))['val'] # km^2
+                max = objects.aggregate(val=Max('areaMax'))['val'] # km^2
+                significantObjs = objects.filter(pValue__lt = 0.05).exclude(slope = -999) # slope = -999 means trend analysis is no good. exclude these objects when looking at "significant" objects
+                # now everything referencing significant objects will exclude these 
+                nSignificant = '{} ({}% of total)'.format(len(significantObjs), round(len(significantObjs)/float(count)*100, 2))
+                aveSlope = round(significantObjs.aggregate(val=Avg('slope'))['val'], 4) # km^2/year
+                nSign_decrease = significantObjs.filter(slope__lt = 0).count()
+                nSign_increase = significantObjs.filter(slope__gt = 0).count()
+                aveSlope_signIncrease = round(significantObjs.filter(slope__gt = 0).aggregate(val=Avg('slope'))['val'], 4)
+                aveSlope_signDecrease = round(significantObjs.filter(slope__lt = 0).aggregate(val=Avg('slope'))['val'], 4)               
+               
+                results.extend([['Total number of water bodies', count, ''], ['Number of water bodies with a statistically significant linear trend (p-value < 0.05)', nSignificant, ''],\
+                 ['Number of water bodies with a statistically significant positive rate of change (slope > 0)', nSign_increase, ''],\
+                 ['Number of water bodies with a statistically significant negative rate of change (slope < 0)', nSign_decrease, ''],\
+                 ['Average rate of change among statistically significant objects', aveSlope, 'km<sup>2</sup>/year'],\
+                 ['Average rate of change among statistically significant objects with positive slope', aveSlope_signIncrease, 'km<sup>2</sup>/year'],\
+                 ['Average rate of change among statistically significant objects with negative slope', aveSlope_signDecrease, 'km<sup>2</sup>/year'],\
+                 ['Minimum MaxExtent area (all years)', min, 'km<sup>2</sup>'], ['Maximum MaxExtent area (all years)', max, 'km<sup>2</sup>']])
                 #print results
-                context['results'] = results               
+                context['results'] = results
+                # pass the query set too (temp for now, trying to map all objects)
+                context['qs'] = objects               
+
+                #* If we did not filter via size class, make histogram: (x = either average area or 
+                # if not search_sizeClass:
+                    # get the count of objects that belong to each size class
+                    # and send to function.chart_sizes_histogram(bins=[], values=[]) where bins is the size class or however we need to do it
+                    # basically, get info from query set that we need to make the histogram chart
+                    # then add histogram chart to context or however we send the plot to template (still havent figured this out)
+                    # and in the template, {% if histogram %} (best way? or whichever way): display histogram, if not history, maybe add "Size class: {}" to HTML
+                # or: else set histogram to none and add histogram to context after if/else block or will result be the same
 
             else: # if for example country is provided but there are no objects for it
                 error_message = 'No objects exist for these filters'
                 context['error_message'] = error_message                 
     else:
-        form = AggSearchForm() # blank form
+        form = SearchForm() # blank form
  
     context['form'] = form
-    return render(request, 'waterExplorer/searchAggregate.html', context)
+    return render(request, 'waterExplorer/search.html', context)
 
-
+"""
 # lake name uses the search by name form and redirects to (object) viewer
 def getLakeName(request):
 
@@ -107,13 +136,13 @@ def getLakeName(request):
                 context['error_message'] = error_message #* NEED to add this to template if theres error
             
     else:
-        form = nameForm() # unbound empty form
+        form = NameForm() # unbound empty form
 
 #    message = '{}'.format(request.GET['q'])
     context['form'] = form
     return render(request, 'waterExplorer/searchByName.html', context) # handles multiple cases    
 #    return HttpResponse(message)
-
+"""
 
 # Home page
 # waterExplorer/
@@ -122,7 +151,7 @@ def index(request):
     return HttpResponse("Hello, world. Welcome to the Global Water Explorer.")
     
 # Object viewer
-def viewer(request, req_id):
+def objectViewer(request, req_id):
     waterBody = get_object_or_404(MaxExtent, pk = req_id)
 
     # Get list of fields for display
@@ -147,23 +176,23 @@ def viewer(request, req_id):
              waterBody.area2008, waterBody.area2009, waterBody.area2010, waterBody.area2011, \
              waterBody.area2012, waterBody.area2013, waterBody.area2014, waterBody.area2015]
 
-#    print len(areas)
-    years = [y for y in range(2000,2016)]
- #   print len(years)
 
     # return plot object that can be passed to template
-    charted = chart_object_areas([x for x in range(2000,2016)], areas, waterBody.slope, waterBody.intercept)
-
-    context = {'waterBody': waterBody, 'displayFields': fields, 'chart': charted}
+#    charted = chart_object_areas([x for x in range(2000,2016)], areas, waterBody.slope, waterBody.intercept)
+    chartName = chart_object_areas([x for x in range(2000,2016)], areas, waterBody.slope, waterBody.intercept)
+    print 'chartName: {}'.format(chartName)
+#    print type(charted)
+    #charted = ''
+    context = {'waterBody': waterBody, 'displayFields': fields, 'chart': chartName}
 
     
 
-    return render(request, 'waterExplorer/viewer.html', context)
+    return render(request, 'waterExplorer/objectViewer.html', context)
 
 
 
 
-
+"""
 # Filter views:
 # By name --> viewer/id
 # By Size --> aggViewer
@@ -183,4 +212,4 @@ def query_by_country(request, country_name):
     #template = loader.get_template('waterExplorer/query_by_country.html')
     context = {'querySet': querySet}
     return render(request, 'waterExplorer/query_by_country.html', context)
-     
+"""  

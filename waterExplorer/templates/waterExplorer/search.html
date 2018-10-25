@@ -1,0 +1,232 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <title>Search Database with Filters</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}" type="text/css">
+
+
+</head>
+<body>
+    <!-- old way for form 
+    <form action="" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Search">
+    </form>
+    -->
+<br>
+<h2 align="center"> Search the Database! </h2>
+<br>
+
+<div class="container">
+    
+ <form action="" method="POST">
+   {% csrf_token %}
+   <div class="row"> <!-- row -->
+     <div class="col-md-6">
+       <h4><b>Search by lake name or geographical region:</b></h4>
+     </div>
+   </div>
+
+   {% if form.errors %}
+   <div id="form-error">
+        <p>One or more error(s) occurred.<br />Please resubmit the form after making the following changes:</p>
+	<ul>
+	{% for field in form %}
+	  {% if field.errors %}< li>{{ field.errors|striptags }}< /li>{% endif %}
+	{% endfor %}
+	</ul>
+   </div>
+   {% endif %}
+
+
+   <!--
+   {% if form.subject.errors %} 
+   <div class="row"> <!-- row if errors -->
+        <div class="col-md-4">
+            <ol role="alertdialog">
+               {% for error in form.subject.errors %}
+               <li role="alert"><strong>{{ error|escape }}</strong></li>
+               {% endfor %}
+            </ol>
+        </div>
+   </div>
+   {% endif %}
+   -->
+
+   <div class="row"> <!-- first row: location select -->
+     <div class="col-md-2"> <!-- lake name -->
+       <div class="fieldWrapper form-group" aria-required={% if field.field.required %}"true"{% else %}"false"{% endif %}>
+         {{ form.lake_name.errors }}
+         <label for=" {{ form.lake_name.id_for_label }}">Lake Name:</label>
+         {{ form.lake_name }}
+       </div>
+     </div>
+     <div class="col-md-2"> <!-- country -->
+       <div class="fieldWrapper form-group" aria-required={% if field.field.required %}"true"{% else %}"false"{% endif %}>
+         {{ form.country_name.errors }}
+         <label for=" {{ form.country_name.id_for_label }}">Country:</label>
+         {{ form.country_name }}
+       </div>
+     </div>
+     <div class="col-md-2"> <!-- continent -->
+       <div class="fieldWrapper form-group" aria-required={% if field.field.required %}"true"{% else %}"false"{% endif %}>
+         {{ form.continent_name.errors }}
+         <label for=" {{ form.continent_name.id_for_label }}">Continent:</label>
+         {{ form.continent_name }}
+       </div>
+     </div>
+     <div class="col-md-2"> <!-- region -->
+       <div class="fieldWrapper form-group" aria-required={% if field.field.required %}"true"{% else %}"false"{% endif %}>
+         {{ form.region_name.errors }}
+         <label for=" {{ form.region_name.id_for_label }}">Region:</label>
+         {{ form.region_name }}
+       </div>
+     </div>
+     <div class="col-md-2"> <!-- subregion -->
+       <div class="fieldWrapper form-group" aria-required={% if field.field.required %}"true"{% else %}"false"{% endif %}>
+         {{ form.subregion_name.errors }}
+         <label for=" {{ form.subregion_name.id_for_label }}">Subregion:</label>
+         {{ form.subregion_name }}
+       </div>
+     </div>
+   </div> <!-- end of row 1 -->
+
+    <div class="row"> <!-- first row: filter forms and submit -->
+     <div class="col-md-2"> <!-- size class -->
+      <div class="fieldWrapper form-group">
+         {{ form.size_class.errors }}
+         <label for=" {{ form.size_class.id_for_label }}">Size (km<sup>2</sup>):</label>
+         {{ form.size_class }}
+      </div>
+    </div>
+    <div class="col-md-2"> <!-- water body type -->
+      <div class="fieldWrapper form-group">
+        {{ form.water_type.errors }}
+        <label for=" {{ form.water_type.id_for_label }}">Water body type:</label>
+        {{ form.water_type }}
+      </div>
+    </div>
+    <div class="col-md-2"> <!-- submit button -->
+      <input type="submit" class="btn btn-primary mb-2" value="Search" />
+    </div>
+    
+
+
+   </div> <!-- end of row 2 -->
+
+ </form>
+</div>
+
+
+
+
+<br><br>
+{% if results %}
+<h1>Viewing aggregate information for search</h1>
+<table>
+  <thead>
+  <th style="text-align: left;"><u>Statistic</u></th>
+  <th style="text-align: left;"><u>Value</u></th>
+  </thead>
+  <!-- <tr><td>Name</td><td>Value</td></tr> -->
+  <tbody>
+  {% for result in results %}
+    <tr>
+    <td><span style="font-weight:bold">{{result.0}}</span></td>
+    <td>{{result.1}} {{result.2|safe}}</td>
+    </tr> <!-- if result.0 is one of a few results, add km^2. bext way? third item in list if result.0 add km2? idk-->
+  {% endfor %}
+  </tbody>
+</table>
+
+
+<!-- still in the if results block -->
+<!-- try temporarily to add all objects to map if qs is passed-->
+{% if qs %}
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBrEjsTOsGQBZe6jC0m5JC-Th03zq0QxMU&v=3"></script>
+<div id="map_div" style="height: 800px; width: 1000px;"></div>
+<script type="text/javascript">
+
+/*
+ * declare map as a global variable, create geojson feature by wrapping geojson
+ */
+  var map;
+  var gjson;
+
+ /*
+  * use google maps api built-in mechanism to attach dom events
+  */
+ google.maps.event.addDomListener(window, "load", function () {
+
+  /*
+   * create map
+   */
+  var map = new google.maps.Map  (document.getElementById("map_div"), {
+   center: new google.maps.LatLng(20, 0),
+   zoom:21,
+   mapTypeId: google.maps.MapTypeId.HYBRID
+  });
+
+  var bound = new google.maps.LatLngBounds();
+  {% for waterBody in qs %}
+
+    var gjson = { "type": "Feature",
+            "geometry": {{ waterBody.poly.geojson|safe }}
+            }
+    bound.extend( new google.maps.LatLng( {{ waterBody.centerLat }}, {{ waterBody.centerLon }}) );
+    map.data.addGeoJson(gjson);
+
+  {% endfor %}
+  map.fitBounds(bound)
+
+  <!-- function to set color based on slope and p-value -->
+   map.data.setStyle(function(feature) {
+    var pval = {{ waterBody.pValue }};
+    var slope = {{ waterBody.slope }};
+    var color = "gray";
+
+    if ((pval < 0.05 ) && (slope < 0) && (slope != -999)){
+      color = "red";
+    } else if ((pval < 0.05 ) && (slope > 0)){
+      color = "purple";
+    } else if ((pval >= 0.05 ) && (slope > 0)){
+      color = "blue";
+    } else if ((pval >= 0.05 ) && (slope < 0) && (slope != -999)){
+      color = "yellow";
+    } else {
+      color = "gray";
+    }
+    return {
+      fillColor: color,
+      strokeWeight: 1
+    }
+  });
+
+
+
+});
+</script>
+
+{% endif %} <!-- end if qs (queryset) block -->
+
+
+{% else %}
+  {{ error_message }}
+{% endif %} <!-- end if results block -->
+
+
+
+
+
+</body>
+</html>

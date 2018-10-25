@@ -34,17 +34,17 @@ class MaxExtent(models.Model):
     
     # Model fields correspond to subset of fields in MaxExtent_2000to2015.shp: 
     id = models.IntegerField(primary_key=True) # gridcode
-    geoName = models.CharField('Geounit name (territories are unique geounits)', max_length=40, null=True) # GEOUNIT
-    sovereignty = models.CharField('Sovereign country name', max_length=32, null=True) # SOVEREIGNT
-    abbrName = models.CharField('3-character country abbreviation', max_length=3, null=True) # SU_A3
+    geoName = models.CharField('Geounit name (territories are unique geounits)', max_length=40, null=True, blank=True) # GEOUNIT
+    sovereignty = models.CharField('Sovereign country name', max_length=32, null=True, blank=True) # SOVEREIGNT
+    abbrName = models.CharField('3-character country abbreviation', max_length=3, null=True, blank=True) # SU_A3
     population = models.IntegerField('Country population', null=True)
     medianGdp = models.IntegerField("Country's median GDP", null=True)
     continent = models.CharField('Continent name', max_length=23)
-    unRegion = models.CharField('UN region name', max_length=23)
-    subregion = models.CharField('UN subregion', max_length=25)
+    unRegion = models.CharField('UN region name', max_length=23, blank=True)
+    subregion = models.CharField('UN subregion', max_length=25, blank=True)
     lakeName = models.CharField('GLWD Lake name', max_length=50)
-    glwdCountry = models.CharField('Country name according to the GLWD', max_length = 30)
-    glwdCountry2 = models.CharField('Other intersecting country names, per GLWD', max_length=50)
+    glwdCountry = models.CharField('Country name according to the GLWD', max_length = 30, blank=True)
+    glwdCountry2 = models.CharField('Other intersecting country names, per GLWD', max_length=50, blank=True)
     areaMax = models.FloatField('Max Extent area (km^2)')
     area2000 = models.FloatField('2000 area (km^2)')
     area2001 = models.FloatField('2001 area (km^2)')
