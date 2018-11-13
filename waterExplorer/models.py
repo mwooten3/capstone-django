@@ -14,6 +14,12 @@ class testgeo(models.Model):
     def __str__(self): # string representation of the model will be it's name
         return self.name
 
+class MaxExtentPlot(models.Model):
+    maxExtent = models.ForeignKey("MaxExtent", on_delete=models.CASCADE)
+    plot = models.ImageField(upload_to="plots")
+    
+
+
 
 class MaxExtent(models.Model):
     
@@ -38,33 +44,33 @@ class MaxExtent(models.Model):
     sovereignty = models.CharField('Sovereign country name', max_length=32, null=True, blank=True) # SOVEREIGNT
     abbrName = models.CharField('3-character country abbreviation', max_length=3, null=True, blank=True) # SU_A3
     population = models.IntegerField('Country population', null=True)
-    medianGdp = models.IntegerField("Country's median GDP", null=True)
+    medianGdp = models.IntegerField("Country median GDP", null=True)
     continent = models.CharField('Continent name', max_length=23)
     unRegion = models.CharField('UN region name', max_length=23, blank=True)
     subregion = models.CharField('UN subregion', max_length=25, blank=True)
     lakeName = models.CharField('GLWD Lake name', max_length=50)
-    glwdCountry = models.CharField('Country name according to the GLWD', max_length = 30, blank=True)
+    glwdCountry = models.CharField('Country name according to GLWD', max_length = 30, blank=True)
     glwdCountry2 = models.CharField('Other intersecting country names, per GLWD', max_length=50, blank=True)
-    areaMax = models.FloatField('Max Extent area (km^2)')
-    area2000 = models.FloatField('2000 area (km^2)')
-    area2001 = models.FloatField('2001 area (km^2)')
-    area2002 = models.FloatField('2002 area (km^2)')
-    area2003 = models.FloatField('2003 area (km^2)')
-    area2004 = models.FloatField('2004 area (km^2)')
-    area2005 = models.FloatField('2005 area (km^2)')
-    area2006 = models.FloatField('2006 area (km^2)')
-    area2007 = models.FloatField('2007 area (km^2)')
-    area2008 = models.FloatField('2008 area (km^2)')
-    area2009 = models.FloatField('2009 area (km^2)')
-    area2010 = models.FloatField('2010 area (km^2)')
-    area2011 = models.FloatField('2011 area (km^2)')
-    area2012 = models.FloatField('2012 area (km^2)')
-    area2013 = models.FloatField('2013 area (km^2)')
-    area2014 = models.FloatField('2014 area (km^2)')
-    area2015 = models.FloatField('2015 area (km^2)')
-    slope = models.FloatField('Rate of change (2000 to 2015; km^2/year)')
+    areaMax = models.FloatField('Max Extent area (km<sup>2</sup>)')
+    area2000 = models.FloatField('2000 area (km<sup>2</sup>)')
+    area2001 = models.FloatField('2001 area (km<sup>2</sup>)')
+    area2002 = models.FloatField('2002 area (km<sup>2</sup>)')
+    area2003 = models.FloatField('2003 area (km<sup>2</sup>)')
+    area2004 = models.FloatField('2004 area (km<sup>2</sup>)')
+    area2005 = models.FloatField('2005 area (km<sup>2</sup>)')
+    area2006 = models.FloatField('2006 area (km<sup>2</sup>)')
+    area2007 = models.FloatField('2007 area (km<sup>2</sup>)')
+    area2008 = models.FloatField('2008 area (km<sup>2</sup>)')
+    area2009 = models.FloatField('2009 area (km<sup>2</sup>)')
+    area2010 = models.FloatField('2010 area (km<sup>2</sup>)')
+    area2011 = models.FloatField('2011 area (km<sup>2</sup>)')
+    area2012 = models.FloatField('2012 area (km<sup>2</sup>)')
+    area2013 = models.FloatField('2013 area (km<sup>2</sup>)')
+    area2014 = models.FloatField('2014 area (km<sup>2</sup>)')
+    area2015 = models.FloatField('2015 area (km<sup>2</sup>)')
+    slope = models.FloatField('Rate of change (2000 to 2015; km<sup>2</sup>/year)')
     intercept = models.FloatField()
-    rSquared = models.FloatField('R^2 of linear trend')
+    rSquared = models.FloatField('R<sup>2</sup> of linear trend')
     pValue = models.FloatField('P-value of linear trend')
     stdErr = models.FloatField('Standard error of linear trend')
     nYears = models.IntegerField('Number of years where water body is identified')

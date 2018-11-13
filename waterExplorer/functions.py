@@ -9,10 +9,11 @@ import numpy as np
 from numpy.random import rand
 
 import cStringIO
+import io
 from django.contrib.staticfiles.templatetags.staticfiles import static
 
 
-def chart_object_areas(X, Y, slope, intercept):
+def chart_object_areas(X, Y, slope, intercept, objId):
 #    print X # years
 #    print Y # areas
 #    print slope
@@ -21,6 +22,7 @@ def chart_object_areas(X, Y, slope, intercept):
     plt.xlim(np.min(X)-1, np.max(X)+1)
     plt.ylabel('Area ($km^2$)')
     plt.xlabel('Year')
+    plt.title('Area over time and best fit line, ID {}'.format(objId))
     plt.scatter(X, Y)
 
     # plot the best fit line too
@@ -30,19 +32,24 @@ def chart_object_areas(X, Y, slope, intercept):
 
 
     #plt.show()
-    figPath = static('area_plot.png')
-    print 'figPath:'
-    print figPath
+#    figPath = static('area_plot_new.png')#.format(objId))
+    figPath = '/att/gpfsfs/briskfs01/ppl/mwooten3/capstone/capstone-django/static/plot_new.png'
+#    print 'figPath:'
+#    print figPath
     plt.savefig(figPath)
-    f = cStringIO.StringIO() # redirect
-    plt.savefig(f, format="png", facecolor=(0.95,0.95,0.95))
-    plt.clf()        
+#    f = cStringIO.StringIO() # redirect
+#    plt.savefig(f, format="png", facecolor=(0.95,0.95,0.95))
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    plt.clf()    
+    return buf       
     
 
 
 
-#    return f.getvalue() 
-    return figPath
+#    return f#.getvalue() 
+#    return figPath
 
 #def chart_sizes_histogram(): 
 

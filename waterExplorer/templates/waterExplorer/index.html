@@ -1,0 +1,73 @@
+{% extends "waterExplorer/base.html" %}
+{% load static %}
+
+<body>
+{% block content %}
+
+<div class="container-fluid">
+<br>
+ <div class="row">
+   <div class="col-md-12">
+<!--    <h2><span style="font-size:26pt;font-family:Impact, Charcoal, sans-serif;font-style:bold;">Welcome to the Global Inland Water Explorer!</span></h2> -->
+     <h1><b>Welcome to the Global Inland Water Explorer!</b></h1>
+   </div>
+ </div>
+<br>
+
+<div class="square">
+ <div class="row">
+   <div class="col-md-6">
+     <p class="home-p"><span style ="font-size:24pt;font-family:Impact, Charcoal, sans-serif;font-style:bold;">WHAT?</span>  
+       The Global Inland Water Explorer is a tool for investigating trends in inland surface water. Underlying the interface
+       is a spatial database that stores almost two million polygons representing the Earth’s largest water bodies, from 
+       2000 to 2015. To learn more about the data used, please see the <a href="{% url 'about' %}">About section</a>.
+     </p>
+   </div>
+   <div class="col-md-6">
+     <p class="home-p"><span style ="font-size:24pt;font-family:Impact, Charcoal, sans-serif;font-style:bold;">HOW?</span>
+      To explore the database, you can search by lake name or geographical region. For the former, attribute information 
+      about the selected lake will be shown. If searching by location, statistics on the group of water bodies will be 
+      returned. This search type also enables the option to filter by surface area size or water body type.
+     </p>
+   </div>
+ </div>
+ <div class="row">
+   <div class="col-md-12">
+     <p class="home-p"><span style ="font-size:24pt;font-family:Impact, Charcoal, sans-serif;font-style:bold;">WHY?</span>  
+      As climate change intensifies and surface water extent changes, uncertainty regarding water availability is greater 
+      than ever. Over two billion people are already living in “water-stressed” regions and the overall amount of freshwater 
+      that is available for irrigation and consumption is expected to decrease. Because climate change will continue to play 
+      a large role in the changing hydrological cycle, it is important that researchers are able to monitor how water bodies 
+      are transforming over time on a regional and individual basis.
+     </p>
+   </div>
+ </div>
+
+ <div class="row">
+   <div class="col-md-12 text-center">
+     <form action="{% url 'searchDb' %}">
+      <input type="submit" id="search-btn" value="Search the database" />
+     </form>
+   </div>
+ </div>
+
+
+</div> <!-- end of square div-->
+
+
+ <br>
+ <div class="row">
+   <div class="col-md-12 text-center">
+     <figure>
+      <img id="image" src="{% static "waterScarcity_IPCC.jpg" %}" alt="IPCC Technical Report figure detailing a global map of water scarcity, with examples" />
+      <figcaption style="font-size:13pt;">The above figure, from IPCC's Technical Report "<a href="https://www.ipcc.ch/pdf/technical-papers/climate-change-water-en.pdf" target="_blank">Climate Change and Water</a>" depicts water <br>stress, with examples from around the globe. </figcaption>
+     </figure>
+   </div>
+ </div>
+
+
+
+</div> <!-- end of bootstrap container -->
+
+{% endblock %}
+</body>

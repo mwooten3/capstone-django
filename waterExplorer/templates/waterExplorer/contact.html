@@ -1,0 +1,55 @@
+{% extends "waterExplorer/base.html" %}
+
+{% block content %}
+
+{% if form %}
+<div class="container">
+<br>
+<h1><b>Contact Us:</b></h1>
+<div class="contact-form">
+<form class="form-horizontal" method="post">{% csrf_token %}
+    <fieldset>
+        <legend>{{ title }}</legend>
+        {% for field in form %}
+            {% if field.errors %}
+                <div class="control-group error">
+                    <label class="control-label">{{ field.label }}</label> 
+                    <div class="controls">{{ field }}
+                        <span class="help-inline">
+                            {% for error in  field.errors %}{{ error }}{% endfor %}
+                        </span>
+                    </div>
+                </div>
+            {% else %}
+                <br>
+                <div class="control-group">
+                    <label class="control-label">{{ field.label }}</label> 
+                    <div class="controls">{{ field }}
+                        {% if field.help_text %}
+                            <p class="help-inline"><small>{{ field.help_text }}</small></p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </fieldset>
+    <br>
+    <div class="form-actions">
+        <button type="submit" id="submit" class="btn btn-primary" >Send Message</button>
+    </div>
+</form>
+</div>
+</div>
+
+{% endif %}
+
+{% if message %}
+<br>
+<div class="contact-form">      
+<h2>{{ message|safe }}</h2>
+<h4><a href="{% url 'contact' %}">Send another message</a></h4>
+</div>
+{% endif %}
+
+
+{% endblock %}

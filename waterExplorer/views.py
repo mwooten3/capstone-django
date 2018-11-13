@@ -10,9 +10,16 @@ from django.db.models import Q, Max, Min, Avg
 
 from django.forms import ModelForm
 
-from .models import MaxExtent
+from .models import MaxExtent, MaxExtentPlot
 from .forms import SearchForm
 from .functions import chart_object_areas
+
+#from collection.forms import ContactForm
+from .forms import ContactForm
+from django.core.mail import EmailMessage
+from django.template.loader import get_template
+
+from django.core.files.base import ContentFile
 
 #searchDb includes search form AND the output of that search (unless Lake Name field is filled out)
 # if lake_name: waterExplorer/search --> searchDb() --> objectViewer.html
@@ -42,6 +49,9 @@ def searchDb(request):
                 else:
                     error_message = 'Object with name {} does not exist'.format(search_name)
                     context['error_message'] = error_message #* NEED to add this to template if theres error  
+                    context['form'] = form
+                    context['search_page'] = "active"
+                    context['page_name'] = "Global Water Explorer | Search"
                     return render(request, 'waterExplorer/search.html', context)
 
             # deal with location-based fields - use icontains to allow lower case entry (may not matter if/when we format fields as drop down/etc- still will need it for country)
@@ -62,7 +72,7 @@ def searchDb(request):
                 search_min = search_sizeRange.split('-')[0]
                 search_max = search_sizeRange.split('-')[1]
                 objects = objects.filter(areaMax__gt = search_min, areaMax__lte = search_max)
-                #objects = objects.filter( # areaMax >= rangeMin and areaMax < rangeMax         
+               #objects = objects.filter( # areaMax >= rangeMin and areaMax < rangeMax         
             if search_waterType: # NOTE (add note to form html? how?): This filter will only return objects that are in the GLWD
                 objects = objects.filter(typeGlwd__icontains = search_waterType)            
             
@@ -76,15 +86,19 @@ def searchDb(request):
                 significantObjs = objects.filter(pValue__lt = 0.05).exclude(slope = -999) # slope = -999 means trend analysis is no good. exclude these objects when looking at "significant" objects
                 # now everything referencing significant objects will exclude these 
                 nSignificant = '{} ({}% of total)'.format(len(significantObjs), round(len(significantObjs)/float(count)*100, 2))
-                aveSlope = round(significantObjs.aggregate(val=Avg('slope'))['val'], 4) # km^2/year
-                nSign_decrease = significantObjs.filter(slope__lt = 0).count()
-                nSign_increase = significantObjs.filter(slope__gt = 0).count()
-                aveSlope_signIncrease = round(significantObjs.filter(slope__gt = 0).aggregate(val=Avg('slope'))['val'], 4)
-                aveSlope_signDecrease = round(significantObjs.filter(slope__lt = 0).aggregate(val=Avg('slope'))['val'], 4)               
+                aveSlope, nSign_decrease, nSign_increase, aveSlope_signIncrease, aveSlope_signDecrease = [0]*5 # initialize to 0
+                if len(significantObjs) > 0:
+                    aveSlope = round(significantObjs.aggregate(val=Avg('slope'))['val'], 4) # km^2/year
+                    nSign_increase = significantObjs.filter(slope__gt = 0).count()
+                    nSign_decrease = significantObjs.filter(slope__lt = 0).count()
+                    if nSign_increase > 0:
+                        aveSlope_signIncrease = round(significantObjs.filter(slope__gt = 0).aggregate(val=Avg('slope'))['val'], 4)
+                    if nSign_decrease > 0:    
+                        aveSlope_signDecrease = round(significantObjs.filter(slope__lt = 0).aggregate(val=Avg('slope'))['val'], 4)               
                
                 results.extend([['Total number of water bodies', count, ''], ['Number of water bodies with a statistically significant linear trend (p-value < 0.05)', nSignificant, ''],\
-                 ['Number of water bodies with a statistically significant positive rate of change (slope > 0)', nSign_increase, ''],\
-                 ['Number of water bodies with a statistically significant negative rate of change (slope < 0)', nSign_decrease, ''],\
+                 ['Number of water bodies with a statistically significant positive rate of change', nSign_increase, ''],\
+                 ['Number of water bodies with a statistically significant negative rate of change', nSign_decrease, ''],\
                  ['Average rate of change among statistically significant objects', aveSlope, 'km<sup>2</sup>/year'],\
                  ['Average rate of change among statistically significant objects with positive slope', aveSlope_signIncrease, 'km<sup>2</sup>/year'],\
                  ['Average rate of change among statistically significant objects with negative slope', aveSlope_signDecrease, 'km<sup>2</sup>/year'],\
@@ -110,6 +124,8 @@ def searchDb(request):
         form = SearchForm() # blank form
  
     context['form'] = form
+    context['search_page'] = "active"
+    context['page_name'] = "Global Water Explorer | Search"
     return render(request, 'waterExplorer/search.html', context)
 
 """
@@ -148,7 +164,79 @@ def getLakeName(request):
 # waterExplorer/
 def index(request):
     #* need to do view? and template for Home page
-    return HttpResponse("Hello, world. Welcome to the Global Water Explorer.")
+    context = {"home_page": "active", "page_name": "Global Water Explorer | Home"}
+    return render(request, 'waterExplorer/index.html', context)
+#    return HttpResponse("Hello, world. Welcome to the Global Water Explorer.")
+
+def about(request):
+    #* need to do view? and template for Home page
+    context = {"about_page": "active", "page_name": "Global Water Explorer | About"}
+    return render(request, 'waterExplorer/about.html', context)
+#    return HttpResponse("about Hello, world. Welcome to the Global Water Explorer.")
+
+def contact(request):
+
+    form_class = ContactForm
+
+    context = {"contact_page":"active", 
+              "page_name":"Global Water Explorer | Contact" }
+    
+    if request.method == 'POST':
+        form = form_class(data=request.POST)
+
+        if form.is_valid():
+            contact_name = request.POST.get(
+                'contact_name'
+            , '')
+            contact_email = request.POST.get(
+                'contact_email'
+            , '')
+            form_content = request.POST.get('content', '')
+
+            # Email the profile with the
+            # contact information
+            template = get_template('contact_template.txt')
+#            context = {
+#                'contact_name': contact_name,
+#                'contact_email': contact_email,
+#                'form_content': form_content,
+#            }
+
+            context['contact_name'] = contact_name
+            context['contact_email'] = contact_email
+#            context['form_content'] = form_content   
+
+            content = template.render(context)
+#            content = 'waterExplorer/search.html')
+            email = EmailMessage(
+                "New contact form submission",
+                content,
+                "Your website" +'',
+                ['youremail@gmail.com'],
+                headers = {'Reply-To': contact_email }
+            )
+
+            email.send()
+
+#            context["contact_page"] = "active"
+#            context["page_name"] = "Global Water Explorer | Contact"
+            context["message"] = 'Message sent. Thank you!'
+#            context["form"] = form_class
+#            return redirect('contact')
+            return render(request, 'waterExplorer/contact.html', context)
+        
+        else: # form not valid 
+#            context["contact_page"] = "active"
+#            context["form"] = form_class
+#            context["page_name"] = "Global Water Explorer | Contact"
+            context["message"] = "Please try again"
+
+
+    #context = {"form": form_class, "contact_page": "active", "page_name": "Global Water Explorer | Contact"}
+    context["form"] = form_class
+#    context["contact_page"] = "active"
+#    context["page_name"] = "Global Water Explorer | Contact"
+    return render(request, 'waterExplorer/contact.html', context)
     
 # Object viewer
 def objectViewer(request, req_id):
@@ -159,7 +247,8 @@ def objectViewer(request, req_id):
     class MaxExtentForm(ModelForm):
         class Meta:
             model = MaxExtent
-            fields = displayFields
+#            fields = displayFields
+            exclude = []  
     fields = MaxExtentForm(instance=waterBody)
 
     # Send area values and slope to chart function
@@ -179,11 +268,19 @@ def objectViewer(request, req_id):
 
     # return plot object that can be passed to template
 #    charted = chart_object_areas([x for x in range(2000,2016)], areas, waterBody.slope, waterBody.intercept)
-    chartName = chart_object_areas([x for x in range(2000,2016)], areas, waterBody.slope, waterBody.intercept)
-    print 'chartName: {}'.format(chartName)
+    chartData = chart_object_areas([x for x in range(2000,2016)], areas, waterBody.slope, waterBody.intercept, waterBody.id)
+#    print len(chartData)
+    plot, created = MaxExtentPlot.objects.get_or_create(maxExtent=waterBody)
+    plot.plot.save("plot_{}.png".format(waterBody.id), ContentFile(chartData.read()))
+    plot.save()
+        
+#print 'chartName: {}'.format(chartName)
 #    print type(charted)
     #charted = ''
-    context = {'waterBody': waterBody, 'displayFields': fields, 'chart': chartName}
+    context = {'waterBody': waterBody, 'displayFields': fields, 'chart': plot}
+    context['search_page'] = "active"
+    context['page_name'] = "Global Water Explorer | View Object"
+    
 
     
 

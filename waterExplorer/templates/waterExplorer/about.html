@@ -1,0 +1,105 @@
+{% extends "waterExplorer/base.html" %}
+
+{% block content %}
+
+<div class="container-fluid">
+<br>
+ <div class="row">
+   <div class="col-md-12">
+    <h1><b>About the data:</b></h1>
+   </div>
+ </div>
+ <div class="row">
+   <div class="col-md-12">
+    <p class="home-p">The spatial database for the Global Inland Water Explorer was derived from the NASA MODIS Water 250 m Mask. 
+     The water mask, which consists of 15 years of global inland surface water plus auxiliary Quality Assurance layers in raster format, 
+     is delivered in 291 tiles for each year 2000 – 2015.
+    </p>
+   </div>
+ </div>
+ <div class="row">
+   <div class="col-md-12">
+    <h3><b>Methods:</b></h3>
+   </div>
+ </div>
+ <div class="row">
+   <div class="col-md-12">
+    <p class="home-p">To develop the database, the initial tile rasters were stitched together to create annual global water 
+     mask mosaics. A layer (Max Extent) was created to represent the maximum extent for each water body among all years. Oceans 
+     were removed and some large water bodies were artificially detached from one another so that they accurately represented 
+     separate objects in the database. A spatial join between the Max Extent layer and each annual mosaic rasters was performed 
+     so that the Max Extent’s common ID could be shared between overlapping inland water bodies across time.  
+    </p>
+   </div>
+ </div>
+ <div class="row">
+   <div class="col-md-12">
+    <p class="home-p">The resulting Max Extent layer and annual layers were then converted to polygon shapefiles. Surface area 
+     (km<sup>2</sup>) was calculated for all objects in all shapefiles. In turn, the tables for these annual layers were joined 
+     to the Max Extent layer so that it would include annual area for each water body.
+    </p>
+   </div>
+ </div>
+
+ <div class="row">
+   <div class="col-md-12">
+    <p class="home-p">A linear trend time-series analysis was run on the annual areas to obtain information such as rate of 
+     change (km<sup>2</sup>/year), p-value, and R<sup>2</sup>, all of which were stored as attributes. To provide geographical 
+     context, the MaxExtent shapefile was then spatially joined with the Global Lakes and Wetlands Dataset (GLWD), a static 
+     database of large water bodies plus attributes such as lake name, water body type, and more. Additionally, a countries 
+     shapefile with continent, region, subregion attributes was spatially joined to MaxExtent to obtain more context for 
+     those water bodies that were not included in the GLWD.
+    </p>
+   </div>
+ </div>
+ <div class="row">
+   <div class="col-md-12">
+    <p class="home-p">Finally, the resulting MaxExtent layer shapefile plus attributes was imported to a PostgreSQL/PostGIS 
+     spatial database. This database is the driving force behind the Global Inland Water Explorer.
+    </p>
+   </div>
+ </div>
+
+ <div class="row">
+   <div class="col-md-12">
+    <h3><b>For more information on the MODIS Water Mask:</b></h3>
+   </div>
+ </div>
+
+ <div class="list-group">
+   <li class="li-pad"><a href="https://e4ftl01.cr.usgs.gov/MOLT/MOD44W.006/" target="_blank">Download data</a></li>
+   <li class="li-pad"><a href="https://lpdaac.usgs.gov/sites/default/files/public/product_documentation/mod44w_user_guide_atbd_v6.pdf" target="_blank">User Guide</a></li>
+   <li class="li-pad"><a href="https://lpdaac.usgs.gov/dataset_discovery/modis/modis_products_table/mod44w_v006" target="_blank">MODIS Product Table</a></li>
+ </div> <!-- end of list -->
+
+ <br>
+ <div class="row">
+   <div class="col-md-12">
+    <h3><b>More to come...</b></h3>
+   </div>
+ </div>
+ <div class="row">
+   <div class="col-md-12">
+    <p class="home-p">The Global Inland Water Explorer you see here is in beta. In the future, a number of improvements are expected to be implemented such as:
+    </p>
+   </div>
+ </div>
+ <div class="list-group">
+   <li class="li-pad">Importing each annual layer into spatial databases so that the geometry for each water body can be visualized over time</li>
+   <li class="li-pad">Additional search functionality such as searching by latitude and longitude</li>
+   <li class="li-pad">An identify tool enabling the user to browse map and click on water bodies to obtain a pop-up with information on the identified object</li>
+
+ </div> <!-- end of list -->
+
+</div> <!-- end of bootstrap container -->
+
+
+
+
+
+
+
+
+
+{% endblock %}
+

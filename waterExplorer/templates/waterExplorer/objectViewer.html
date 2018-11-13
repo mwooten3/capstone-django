@@ -1,3 +1,4 @@
+{% extends "waterExplorer/base.html" %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,11 +14,20 @@
 </head>
 
 <body>
-<h1>Viewing water body with ID = {{ waterBody.id }} </h1>
-{% if waterBody.lakeName %}
-<h2>Name: {{ waterBody.lakeName }} </h2>
-{% endif %}
+{% block content %}
 
+
+<div class="container-fluid">
+
+  <div class="row"> <!-- row -->
+     <div class="col-md-12">
+       <br>
+       <h2><b>Viewing {% if waterBody.lakeName %}{{waterBody.lakeName}} (ID {{waterBody.id}}){% else %}ID {{waterBody.id}}{% endif %}:</b></h2>
+     </div>
+   </div>
+
+<div class="row">
+<div class="col-md-12">
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBrEjsTOsGQBZe6jC0m5JC-Th03zq0QxMU&v=3"></script>
 <div id="map_div" style="height: 500px; width: 800px;"></div>
 <script type="text/javascript">
@@ -67,38 +77,54 @@ if (("{{ waterBody.typeGlwd }}" == "River") || ("{{ waterBody.typeGlwd }}" == "R
    zoom: zoomSize, 
    mapTypeId: google.maps.MapTypeId.HYBRID 
   }); 
-  map.data.addGeoJson(gjson);
+  var feature = map.data.addGeoJson(gjson);
+  map.data.setStyle({fillColor:"#DA1DCD"})
 });
 </script>
+</div> <!-- end of column div -->
+</div> <!-- end of row div for map -->
 
-<br>
+<div class="row" class="center-div">
+ <div class="col-md-12">
+  <br>
+  <img src="{{ chart.plot.url }}" alt="area chart" />
+ </div>  <!-- end of col div -->
+</div> <!-- end of bootstrap row div with plot -->
 
-<img src="{% static "area_plot.png" %}" alt="area chart" />
-
-<br>
-<br>
-<h2>---------------------------------------------------------------------------------<br>Object attributes:</h2>
-<br>
-<table style="width:63%">
-   <thead>
-      <th style="text-align: left;"><u>Field Name</u></th>
-      <th style="text-align: left;"><u>Description</u></th>
-      <th style="text-align: left;"><u>Value</u></th>
-   </thead>
-   <tbody>
-      {% for field in displayFields %}
-      {% ifnotequal field.name "poly" %}
-      <tr> 
-        <td><span style="font-weight:bold">{{ field.name }}</span></td>
-        <td><i>{{ field.label }}</i></td>
-        <td>{{ field.value }}</td>
-      </tr>
-      {% endifnotequal %}
-      {% endfor %}
-   </tbody>
-</table>
+<div class="row">
+ <div class="col-md-12">
+  <br><hr><br>
+  <h2><b>Object attributes:</b></h2>
+  <br>
+ </div>
+</div>
 
 
+<div class="row"> <!-- header -->
+  <div class="col-md-7 text-left">
+    <h3><u><b>Attribute:</b></u></h3>
+  </div>
+  <div class="col-md-3 text-left">
+    <h3><u><b>Value:</b></u></h3>
+  </div>
+</div>
 
+{% for field in displayFields %}
+{% if field.name != "poly" and field.name != "id" and field.name != "abbrName" and field.name != "intercept"%}
+<div class="row">
+  <div class="col-md-7">
+    <h5><b>{{ field.label|safe }}</b></h5>
+  </div>
+  <div class="col-md-3">
+    <h5>{{ field.value }}</h5>
+  </div>
+</div>
+{% endif %}
+{% endfor %}
+
+
+</div> <!-- end bootstrap container -->
+
+{% endblock %}
 </body>
 </html>

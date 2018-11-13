@@ -1,9 +1,8 @@
-
+{% extends "waterExplorer/base.html" %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     {% load static %}
-    <title>Search Database with Filters</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
@@ -16,62 +15,43 @@
 
 </head>
 <body>
-    <!-- old way for form 
-    <form action="" method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <input type="submit" value="Search">
-    </form>
-    -->
-<br>
-<h2 align="center"> Search the Database! </h2>
-<br>
 
-<div class="container">
+
+{% block content %}
+
+<div class="container-fluid">
     
- <form action="" method="POST">
+ <form action="" method="POST" class='form-horizontal'>
    {% csrf_token %}
+
    <div class="row"> <!-- row -->
-     <div class="col-md-6">
-       <h4><b>Search by lake name or geographical region:</b></h4>
+     <div class="col-md-12">
+       <br>
+       <h3><b>Search the database by lake name or geographical region:</b></h3>
      </div>
    </div>
 
    {% if form.errors %}
    <div id="form-error">
-        <p>One or more error(s) occurred.<br />Please resubmit the form after making the following changes:</p>
+        <p>One or more error(s) occurred. Please resubmit the form after making the following changes:</p>
 	<ul>
-	{% for field in form %}
-	  {% if field.errors %}< li>{{ field.errors|striptags }}< /li>{% endif %}
-	{% endfor %}
+          {% for key, value in form.errors.items %}
+            <li style="color:red">{{ value|striptags }}! </li>
+          {% endfor %}
 	</ul>
    </div>
    {% endif %}
 
 
-   <!--
-   {% if form.subject.errors %} 
-   <div class="row"> <!-- row if errors -->
-        <div class="col-md-4">
-            <ol role="alertdialog">
-               {% for error in form.subject.errors %}
-               <li role="alert"><strong>{{ error|escape }}</strong></li>
-               {% endfor %}
-            </ol>
-        </div>
-   </div>
-   {% endif %}
-   -->
-
-   <div class="row"> <!-- first row: location select -->
-     <div class="col-md-2"> <!-- lake name -->
-       <div class="fieldWrapper form-group" aria-required={% if field.field.required %}"true"{% else %}"false"{% endif %}>
+  <div class="row"> <!-- first row: location select -->
+     <div class="col-md-3"> <!-- lake name -->
+       <div class="form-group" aria-required={% if field.field.required %}"true"{% else %}"false"{% endif %}>
          {{ form.lake_name.errors }}
          <label for=" {{ form.lake_name.id_for_label }}">Lake Name:</label>
-         {{ form.lake_name }}
+         <div class="span3">{{ form.lake_name }}</div>
        </div>
      </div>
-     <div class="col-md-2"> <!-- country -->
+     <div class="col-md-3"> <!-- country -->
        <div class="fieldWrapper form-group" aria-required={% if field.field.required %}"true"{% else %}"false"{% endif %}>
          {{ form.country_name.errors }}
          <label for=" {{ form.country_name.id_for_label }}">Country:</label>
@@ -101,6 +81,13 @@
      </div>
    </div> <!-- end of row 1 -->
 
+   <div class="row"> <!-- row -->
+     <div class="col-md-6">
+       <h4><b>Optional Filters:</b></h4>
+     </div>
+   </div>
+
+
     <div class="row"> <!-- first row: filter forms and submit -->
      <div class="col-md-2"> <!-- size class -->
       <div class="fieldWrapper form-group">
@@ -112,12 +99,13 @@
     <div class="col-md-2"> <!-- water body type -->
       <div class="fieldWrapper form-group">
         {{ form.water_type.errors }}
-        <label for=" {{ form.water_type.id_for_label }}">Water body type:</label>
+        <label for=" {{ form.water_type.id_for_label }}">Type:</label>
         {{ form.water_type }}
       </div>
     </div>
+    <div class="col-md-4"></div>
     <div class="col-md-2"> <!-- submit button -->
-      <input type="submit" class="btn btn-primary mb-2" value="Search" />
+       <input type="submit" id="submit" class="btn btn-primary btn-lg mb-2 mt-auto align-bottom" value="Search" />
     </div>
     
 
@@ -131,30 +119,15 @@
 
 
 <br><br>
+<div class="container">
 {% if results %}
-<h1>Viewing aggregate information for search</h1>
-<table>
-  <thead>
-  <th style="text-align: left;"><u>Statistic</u></th>
-  <th style="text-align: left;"><u>Value</u></th>
-  </thead>
-  <!-- <tr><td>Name</td><td>Value</td></tr> -->
-  <tbody>
-  {% for result in results %}
-    <tr>
-    <td><span style="font-weight:bold">{{result.0}}</span></td>
-    <td>{{result.1}} {{result.2|safe}}</td>
-    </tr> <!-- if result.0 is one of a few results, add km^2. bext way? third item in list if result.0 add km2? idk-->
-  {% endfor %}
-  </tbody>
-</table>
+ 
 
-
-<!-- still in the if results block -->
-<!-- try temporarily to add all objects to map if qs is passed-->
+<!--map logic first-->
+<hr>
 {% if qs %}
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBrEjsTOsGQBZe6jC0m5JC-Th03zq0QxMU&v=3"></script>
-<div id="map_div" style="height: 800px; width: 1000px;"></div>
+<div class="center-div" id="map_div" style="height: 700px; width: 920px;"></div>
 <script type="text/javascript">
 
 /*
@@ -173,9 +146,33 @@
    */
   var map = new google.maps.Map  (document.getElementById("map_div"), {
    center: new google.maps.LatLng(20, 0),
-   zoom:21,
+   /*zoom:21,*/
    mapTypeId: google.maps.MapTypeId.HYBRID
   });
+
+  <!-- function to set color based on slope and p-value -->
+  var getStyle = function(pval, slope, id, name) {
+    var color = "gray";
+    
+    if ((pval < 0.05 ) && (slope < 0) && (slope != -999)){
+      color = "#fa221a";
+    } else if ((pval < 0.05 ) && (slope > 0)){
+      color = "#9f09eb";
+    } else if ((pval >= 0.05 ) && (slope > 0)){
+      color = "#1351f9";
+    } else if ((pval >= 0.05 ) && (slope < 0) && (slope != -999)){
+      color = "#E98E50";
+    }
+    return {
+      fillColor: color,
+      strokeWeight: .2,
+      strokeOpacity: .5,
+      fillOpacity: 1
+
+      // title only applies to point geometries, do something similar with polygon?
+      //title: 'Object ' + id + ', ' + name
+    }
+ }
 
   var bound = new google.maps.LatLngBounds();
   {% for waterBody in qs %}
@@ -184,48 +181,55 @@
             "geometry": {{ waterBody.poly.geojson|safe }}
             }
     bound.extend( new google.maps.LatLng( {{ waterBody.centerLat }}, {{ waterBody.centerLon }}) );
-    map.data.addGeoJson(gjson);
-
-  {% endfor %}
-  map.fitBounds(bound)
-
-  <!-- function to set color based on slope and p-value -->
-   map.data.setStyle(function(feature) {
-    var pval = {{ waterBody.pValue }};
-    var slope = {{ waterBody.slope }};
-    var color = "gray";
-
-    if ((pval < 0.05 ) && (slope < 0) && (slope != -999)){
-      color = "red";
-    } else if ((pval < 0.05 ) && (slope > 0)){
-      color = "purple";
-    } else if ((pval >= 0.05 ) && (slope > 0)){
-      color = "blue";
-    } else if ((pval >= 0.05 ) && (slope < 0) && (slope != -999)){
-      color = "yellow";
-    } else {
-      color = "gray";
+    var features = map.data.addGeoJson(gjson);
+    var style = getStyle({{waterBody.pValue}}, {{waterBody.slope}}, {{waterBody.id}}, '{{waterBody.lakeName}}');
+    for (var i = 0; i < features.length; i++) {
+         map.data.overrideStyle(features[i], style);
     }
-    return {
-      fillColor: color,
-      strokeWeight: 1
-    }
-  });
 
-
+{% endfor %}
+map.fitBounds(bound)
 
 });
 </script>
 
 {% endif %} <!-- end if qs (queryset) block -->
 
+<!-- statistic information -->
+  <div class="row"> <!-- row -->
+     <div class="col-md-12 text-center">
+       <hr>
+       <h2><b>Viewing aggregate information for search:</b></h2>
+     </div>
+   </div>
+
+   <div class="row text-center"> <!-- header  -->
+     <div class="col-md-9 text-left">
+       <h3><u><b>Statistic</b></u></h3>
+     </div>
+     <div class="col-md-3 text-left">
+       <h3><u><b>Value:</b></u></h3>
+     </div>
+   </div>
+
+   {% for result in results %}
+   <div class="row">
+     <div class="col-md-9">
+       <h5><b>{{result.0}}</b></h5>
+     </div>
+     <div class="col-md-3">
+       <h5>{{result.1}} {{result.2|safe}}</h5>
+     </div>
+   </div>
+   {% endfor %}
 
 {% else %}
-  {{ error_message }}
+  <p class="error-message">{{ error_message }}</p>
 {% endif %} <!-- end if results block -->
 
+</div> <!-- end bootstrap container -->
 
-
+{% endblock %}
 
 
 </body>

@@ -1,0 +1,49 @@
+<!--
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <title>Global Inland Water Explorer | Home</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}" type="text/css">
+
+
+</head>
+<body>
+-->
+
+<!--   <div id="navbarNav"> -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item {{ home_page }}">
+          <a class="nav-link" href="{% url 'index' %}">Home</a>
+        </li>
+        <li class="nav-item {{ search_page }}">
+          <a class="nav-link" href="{% url 'searchDb' %}">Search</a>
+        </li>
+        <li class="nav-item {{ about_page }}">
+          <a class="nav-link" href="{% url 'about' %}">About</a>
+        </li>
+        <li class="nav-item {{ contact_page }}">
+          <a class="nav-link" href="{% url 'contact' %}">Contact</a>
+        </li>
+      </ul>
+      <ul class="navbar-nav ml-auto">
+       <a class="navbar nav-link" id="navbar-logo" href="#">
+        <img style="" width="230" height="85" src="{% static 'logo-use.png' %}">
+       </a>
+      </ul>
+    </nav>
+   <!--</div> -->
+  
+
+<!--
+</body>
+</html>
+-->

@@ -52,8 +52,23 @@ class SearchForm(forms.Form):
         if (country_name and region_name) or (country_name and continent_name) or (region_name and continent_name) \
          or (country_name and subregion_name) or (region_name and subregion_name) or (continent_name and subregion_name): #* better way to do this?
 
-            raise forms.ValidationError('Please only fill in one of the following fields: Lake Name, Country Name, Region Name, Subregion Name, Continent Name')
+            raise forms.ValidationError('Please only fill in one of the following fields: Lake Name, Country, Continent, Region, Subregion')
 
         # check to be sure at least one of the 6 fields is selected
         if not (country_name or region_name or subregion_name or continent_name or size_class or water_type or lake_name): # and 1 of the 6 needs to be selected
             raise forms.ValidationError('Please fill out at least one field') 
+
+class ContactForm(forms.Form):
+    contact_name = forms.CharField(required=True)
+    contact_email = forms.EmailField(required=True)
+    content = forms.CharField(
+        required=True,
+        widget=forms.Textarea
+    )
+
+
+    def __init__(self, *args, **kwargs):
+        super(ContactForm, self).__init__(*args, **kwargs)
+        self.fields['contact_name'].label = "Your name:"
+        self.fields['contact_email'].label = "Your email:"
+        self.fields['content'].label = "Your message:"

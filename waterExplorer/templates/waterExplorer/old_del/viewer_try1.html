@@ -1,0 +1,104 @@
+
+<!-- test stuff- can use later when dealing with a query set and not one object
+but for now we just wanna have a viewer view for the purpose of viewing info about one object
+<p>
+
+{{ waterBody }}
+
+</p>
+
+
+{{ displayFields }}
+<table>
+    <thead>
+        {% for field in displayFields %}
+            <th>{{ field.label }}</th>
+        {% endfor %}
+    </thead>
+    <tbody>
+        <tr>
+            {% for field in displayFields %}
+                <td>{{ field.value|default_if_none:'' }}</td>
+            {% endfor %}
+        </tr>
+    </tbody>
+</table>
+
+
+{% for field in displayFields %}
+    <p>{{field.name}}, {{ field.value }}<br></p>
+{% endfor %}
+-->
+
+
+
+
+
+<html>
+<head>
+    var waterBodyJson = {{ waterBody.poly.geojson|safe }};
+
+
+
+</head>
+
+<body>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?v=3&amp;sensor=false"></script>
+
+<p> {{ waterBody.poly.geojson|safe }} </p>
+<br>
+<h1>----------------Object Attributes for ID = {{ waterBody.id }}-----------------</h1>
+<br>
+<table>
+   <thead>
+      <th>Field Name</th>
+      <th>Description</th>
+      <th>Value</th>
+   </thead>
+   <tbody>
+      {% for field in displayFields %}
+      <tr> 
+        <td><span style="font-weight:bold">{{ field.name }}</span></td>
+        <td>{{ field.label }}</td>
+        <td>{{ field.value }}</td>
+      </tr>
+      {% endfor %}
+   </tbody>
+</table>
+<div id="id_poly_div_map">
+    <div id="id_poly_map"></div>>
+    <style type="text/css">
+    #id_poly_map { width: 600px; height: 400px; }
+    #id_poly_map .aligned label { float: inherit; }
+    #id_poly_div_map { position: relative; vertical-align: top; float: left; }
+    #id_poly { display: none; }
+    </style>
+    <script type="text/javascript">
+        var map_options = {};
+
+            var base_layer = new ol.layer.Tile({
+                source: new ol.source.XYZ({
+                    attributions: "NASA Worldview",
+                    maxZoom: 8,
+                    url: "https://map1{a-c}.vis.earthdata.nasa.gov/wmts-webmerc/" +
+                         "BlueMarble_ShadedRelief_Bathymetry/default/%7BTime%7D/" +
+                         "GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg"
+                })
+            });
+
+        var options = {
+            base_layer: base_layer,
+            geom_name: 'MultiPolygon',
+            id: 'id_poly',
+            map_id: 'id_poly_map',
+            map_options: map_options,
+            map_srid: 4326,
+            name: 'poly'
+        };
+
+        var geodjango_poly = new MapWidget(options);
+    </script>
+    </div>
+</div>
+</body>
+</html>
