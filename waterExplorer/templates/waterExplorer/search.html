@@ -128,6 +128,7 @@
 {% if qs %}
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBrEjsTOsGQBZe6jC0m5JC-Th03zq0QxMU&v=3"></script>
 <div class="center-div" id="map_div" style="height: 700px; width: 920px;"></div>
+<div id="legend"><h5><b>Legend</b></h5></div> <!-- add legend -->
 <script type="text/javascript">
 
 /*
@@ -172,7 +173,7 @@
       // title only applies to point geometries, do something similar with polygon?
       //title: 'Object ' + id + ', ' + name
     }
- }
+  }
 
   var bound = new google.maps.LatLngBounds();
   {% for waterBody in qs %}
@@ -187,11 +188,56 @@
          map.data.overrideStyle(features[i], style);
     }
 
-{% endfor %}
-map.fitBounds(bound)
+    // try to add event to click polygons to open object viewer - this opens up ALL polygons in new window. "window.location.href =" opens the last polygon no matter which you click
+    map.data.addListener('click', function() {
+     window.open("{% url 'objectViewer' waterBody.id %}");
+    });
+
+
+    {% endfor %}
+    map.fitBounds(bound)
+
+    // add legend
+    var iconBase = "{% static "legend_icons/" %}";
+
+    var icons = {
+      i1: {
+        name: 'Negative rate of change, statistically significant',
+        icon: iconBase + 'red.png'
+      },
+      i2: {
+        name: 'Negative rate of change, statistically insignificant',
+        icon: iconBase + 'orange.png'
+      },
+      i3: {
+        name: 'Positive rate of change, statistically significant',
+        icon: iconBase + 'purple.png'
+      },
+      i4: {
+        name: 'Positive rate of change, statistically insignificant',
+        icon: iconBase + 'blue.png'
+      }
+    };
+
+    var legend = document.getElementById('legend');
+        for (var key in icons) {
+          var type = icons[key];
+          var name = type.name;
+          var icon = type.icon;
+          var div = document.createElement('div');
+          div.innerHTML = '<img src="' + icon + '"> ' + name;
+          legend.appendChild(div);
+        }
+
+     map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(legend);
+
+    
+
+
 
 });
 </script>
+
 
 {% endif %} <!-- end if qs (queryset) block -->
 
