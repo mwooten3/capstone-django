@@ -1,0 +1,31 @@
+//map works, click works but takes you to (same) incorrect URL (last polygon) no matter which you click, and loads on same page
+    // try to add event to click polygons to object viewer
+    map.data.addListener('click', function() {
+    window.location.href = "{% url 'objectViewer' waterBody.id %}";
+    });
+
+//map works, opens in new window but opens ALL objects in separate windows when you click ANY of them (Seg fault)
+    // try to add event to click polygons to object viewer
+    map.data.addListener('click', function() {
+    window.open("{% url 'objectViewer' waterBody.id %}");
+    });
+
+//map works but clicking does nothing
+    // try to add event to click polygons to object viewer
+    map.data.addListener(features, 'click', function() {
+    window.open("{% url 'objectViewer' waterBody.id %}");
+    });
+
+//map works but clicking does nothing
+    // try to add event to click polygons to object viewer
+    map.data.addListener(features[0], 'click', function() {
+    window.open("{% url 'objectViewer' waterBody.id %}");
+    });
+
+//map works but clicking does nothing:
+    // try to add event to click polygons to object viewer
+    for (var i = 0; i < features.length; i++) {
+         map.data.addListener(features[i], 'click', function() {
+         window.open("{% url 'objectViewer' waterBody.id %}");
+         });
+    }
